@@ -3,7 +3,7 @@
  */
 
 // Export server factory
-export { createServer } from './server.js';
+export { createServer, createStandaloneServer } from './server.js';
 
 // Export transport factories
 export { createStdioTransport, createHttpTransport } from './transport/index.js';

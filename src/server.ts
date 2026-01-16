@@ -235,3 +235,12 @@ export function createServer(): Server {
 function isValidEcosystem(value: unknown): value is Ecosystem {
   return value === 'npm' || value === 'pypi' || value === 'crates';
 }
+
+/**
+ * Create a standalone MCP server that can be used with StreamableHTTPServerTransport.
+ * This factory function creates a new server instance each time it's called,
+ * which is useful for session-based transports.
+ */
+export function createStandaloneServer(): Server {
+  return createServer();
+}
