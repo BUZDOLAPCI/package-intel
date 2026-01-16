@@ -4,36 +4,82 @@
  */
 
 import { createServer } from './server.js';
-import { createStdioTransport, createHttpTransport } from './transport/index.js';
+import { createStdioTransport, startHttpTransport } from './transport/index.js';
 import { loadConfig } from './config.js';
 
-async function main(): Promise<void> {
+/**
+ * Parse command line arguments
+ */
+function parseArgs(): { port?: number; stdio?: boolean } {
   const args = process.argv.slice(2);
-  const useStdio = args.includes('--stdio');
-  const config = loadConfig();
+  const options: { port?: number; stdio?: boolean } = {};
 
-  const server = createServer();
+  for (let i = 0; i < args.length; i++) {
+    switch (args[i]) {
+      case '--port':
+        if (i + 1 < args.length) {
+          options.port = parseInt(args[i + 1], 10);
+          i++;
+        }
+        break;
+      case '--stdio':
+        options.stdio = true;
+        break;
+      case '--help':
+        printHelp();
+        process.exit(0);
+        break;
+    }
+  }
+  return options;
+}
+
+/**
+ * Print help message
+ */
+function printHelp(): void {
+  console.log(`
+Package Intel MCP Server
+
+USAGE:
+    package-intel [OPTIONS]
+
+OPTIONS:
+    --port <PORT>    Run HTTP server on specified port (default: 8080)
+    --stdio          Use STDIO transport instead of HTTP
+    --help           Print this help message
+
+ENVIRONMENT VARIABLES:
+    PORT             HTTP server port (default: 8080)
+    NODE_ENV         Set to 'production' for production mode
+`);
+}
+
+async function main(): Promise<void> {
+  const cliOptions = parseArgs();
+  const config = loadConfig();
+  const port = cliOptions.port || config.port;
 
   // Handle shutdown
-  process.on('SIGINT', async () => {
+  process.on('SIGINT', () => {
     console.error('\nShutting down Package Intel MCP server...');
-    await server.close();
     process.exit(0);
   });
 
-  process.on('SIGTERM', async () => {
+  process.on('SIGTERM', () => {
     console.error('\nShutting down Package Intel MCP server...');
-    await server.close();
     process.exit(0);
   });
 
   try {
-    if (useStdio) {
+    if (cliOptions.stdio) {
+      // STDIO transport for local development - create single server instance
       console.error('Package Intel MCP server starting in stdio mode...');
+      const server = createServer();
       await createStdioTransport(server);
     } else {
-      // Default to HTTP transport on port 8080
-      await createHttpTransport(server, config.port);
+      // HTTP transport - server instances created per-session
+      startHttpTransport(port);
     }
   } catch (error) {
     console.error('Failed to start server:', error);
