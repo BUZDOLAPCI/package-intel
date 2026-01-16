@@ -9,7 +9,7 @@ import { loadConfig } from './config.js';
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const useHttp = args.includes('--http') || args.includes('-h');
+  const useStdio = args.includes('--stdio');
   const config = loadConfig();
 
   const server = createServer();
@@ -28,11 +28,12 @@ async function main(): Promise<void> {
   });
 
   try {
-    if (useHttp) {
-      await createHttpTransport(server, config.port);
-    } else {
+    if (useStdio) {
       console.error('Package Intel MCP server starting in stdio mode...');
       await createStdioTransport(server);
+    } else {
+      // Default to HTTP transport on port 8080
+      await createHttpTransport(server, config.port);
     }
   } catch (error) {
     console.error('Failed to start server:', error);
