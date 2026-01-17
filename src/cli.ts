@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
  * Package Intel MCP Server - CLI Entry Point
+ * HTTP-only transport for Dedalus deployment
  */
 
-import { createServer } from './server.js';
-import { createStdioTransport, startHttpTransport } from './transport/index.js';
+import { startHttpTransport } from './transport/index.js';
 import { loadConfig } from './config.js';
 
 /**
  * Parse command line arguments
  */
-function parseArgs(): { port?: number; stdio?: boolean } {
+function parseArgs(): { port?: number } {
   const args = process.argv.slice(2);
-  const options: { port?: number; stdio?: boolean } = {};
+  const options: { port?: number } = {};
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -21,9 +21,6 @@ function parseArgs(): { port?: number; stdio?: boolean } {
           options.port = parseInt(args[i + 1], 10);
           i++;
         }
-        break;
-      case '--stdio':
-        options.stdio = true;
         break;
       case '--help':
         printHelp();
@@ -46,7 +43,6 @@ USAGE:
 
 OPTIONS:
     --port <PORT>    Run HTTP server on specified port (default: 8080)
-    --stdio          Use STDIO transport instead of HTTP
     --help           Print this help message
 
 ENVIRONMENT VARIABLES:
@@ -72,15 +68,8 @@ async function main(): Promise<void> {
   });
 
   try {
-    if (cliOptions.stdio) {
-      // STDIO transport for local development - create single server instance
-      console.error('Package Intel MCP server starting in stdio mode...');
-      const server = createServer();
-      await createStdioTransport(server);
-    } else {
-      // HTTP transport - server instances created per-session
-      startHttpTransport(port);
-    }
+    // HTTP transport only
+    startHttpTransport(port);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

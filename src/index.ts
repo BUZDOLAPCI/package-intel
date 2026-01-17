@@ -6,7 +6,7 @@
 export { createServer, createStandaloneServer } from './server.js';
 
 // Export transport factories
-export { createStdioTransport, createHttpTransport, startHttpTransport } from './transport/index.js';
+export { createHttpTransport, startHttpTransport } from './transport/index.js';
 
 // Export tools for direct usage
 export { packageSummary, releaseTimeline, maintenanceSignals } from './tools/index.js';
